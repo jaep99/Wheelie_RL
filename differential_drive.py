@@ -5,7 +5,8 @@ import os
 from scipy.spatial.transform import Rotation as R
 
 xml_path = 'differential_drive.xml' #xml file (assumes this is in the same folder as this file)
-simend = 10 #simulation time
+# simend = 10 #simulation time
+simend = 100 #simulation time
 print_camera_config = 1 #set to 1 to print camera config
                         #this is useful for initializing view of the model)
 
@@ -35,12 +36,55 @@ def controller(model, data):
     #put the controller here. This function is called inside the simulation.
     #pass
     data.ctrl[0] = 10
-    data.ctrl[1] = 0
+    data.ctrl[1] = 10
 
 def keyboard(window, key, scancode, act, mods):
-    if act == glfw.PRESS and key == glfw.KEY_BACKSPACE:
-        mj.mj_resetData(model, data)
-        mj.mj_forward(model, data)
+    global left_thrust, right_thrust
+    if act == glfw.PRESS or glfw.REPEAT:
+        match key:
+            case glfw.KEY_BACKSPACE:
+                mj.mj_resetData(model, data)
+                mj.mj_forward(model, data)
+            case glfw.KEY_LEFT:
+                front_left_thrust = -10
+                front_right_thrust = 10
+                back_left_thrust = -10
+                back_right_thrust = 10
+            case glfw.KEY_RIGHT:
+                front_left_thrust = 10
+                front_right_thrust = -10
+                back_left_thrust = 10
+                back_right_thrust = -10
+            case glfw.KEY_UP:
+                front_left_thrust = 10
+                front_right_thrust = 10
+                back_left_thrust = 10
+                back_right_thrust = 10
+            case glfw.KEY_DOWN:
+                front_left_thrust = -10
+                front_right_thrust = -10
+                back_left_thrust = -10
+                back_right_thrust = -10
+            case _:
+                front_left_thrust = 0
+                front_right_thrust = 0
+                back_left_thrust = 0
+                back_right_thrust = 0
+    else:
+        front_left_thrust = 0
+        front_right_thrust = 0
+        back_left_thrust = 0
+        back_right_thrust = 0
+
+    def controller(model, data):
+        global left_thrust, right_thrust
+        data.ctrl[0] = front_left_thrust
+        data.ctrl[1] = front_right_thrust
+        data.ctrl[2] = back_left_thrust
+        data.ctrl[3] = back_right_thrust
+
+    mj.set_mjcb_control(controller)
+
 
 def mouse_button(window, button, act, mods):
     # update button state
